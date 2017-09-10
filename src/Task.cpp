@@ -8,7 +8,8 @@ Task::Task (const int& taskId, const seconds& repeatSeconds,
                 :taskId(taskId), repeatSeconds(repeatSeconds),
                 taskMethod(taskMethod),
                 taskCompleteCallBack (taskCompleteCallBack) {
-time = time_point_cast<Time_Point::duration> (steady_clock::now()) + repeatSeconds;
+    time = time_point_cast<Time_Point::duration> (steady_clock::now())
+            + repeatSeconds;
 }
 
 // comparator for std::priority_queue;
