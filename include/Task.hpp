@@ -14,14 +14,14 @@ class Task {
     Task_Id                 taskId;
     Time_Point              time;
     Time_Point::duration    repeatSeconds;
-    std::function<void()>   taskMethod;
-    std::function<void()>   taskCompleteCallBack;
+    std::function<duration<double>()>  taskMethod;
+    std::function<void(Task_Id,duration<double>)>   taskCompleteCallBack;
 
 public:
 
     Task (const int& taskId, const seconds& repeatSeconds,
-    std::function<void()>& taskMethod,
-    std::function<void()> taskCompleteCallBack );
+    std::function<duration<double>()> taskMethod,
+    std::function<void(Task_Id,duration<double>)> taskCompleteCallBack );
 
     // comparator for std::priority_queue;
     bool operator>(const Task &other) const;
@@ -34,6 +34,9 @@ public:
 
     // modify the repeat interval
     void modifySchedule (const Time_Point::duration &newRepeatSeconds);
+
+    // execute the abstract function stored in this task
+    void execute();
 
 };
 #endif

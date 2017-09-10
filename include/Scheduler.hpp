@@ -13,8 +13,11 @@ class Scheduler {
     std::mutex mu;
     std::condition_variable cv;
     std::condition_variable non_empty_wake_up;
-    // not sure if we need this now
+    
     std::vector<std::future<void>> pending_futures;
+
+    std::thread worker;
+    std::thread allocator;
 
     using time_point_t = time_point<steady_clock, seconds>;
     std::priority_queue<Task,std::vector<Task>, std::greater<Task> > taskQueue;
@@ -33,7 +36,17 @@ public:
     // modify the schedule of a particular task that has been scheduled
     void modifyTask(Task_Id taskId, Time_Point::duration newRepeatTime);
 
+    void jobWorker();
+
+    void jobAllocator();
+
     // stop the scheduler from running
     void stopScheduler();
+
+    void run();
+
+    inline Time_Point getCurrentTimeInSeconds();
+
+    ~Scheduler();
 };
 #endif

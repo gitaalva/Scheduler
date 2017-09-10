@@ -25,7 +25,7 @@ if (SQLITE3_FOUND)
 endif (SQLITE3_FOUND)
 
 #find and link boost
-find_package(Boost 1.60 COMPONENTS filesystem unit_test_framework system REQUIRED)
+find_package(Boost 1.60 COMPONENTS filesystem unit_test_framework system REQUIRED system)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
-target_link_libraries(Scheduler ${Boost_LIBRARIES})
+target_link_libraries(Scheduler ${Boost_SYSTEM_LIBRARY})

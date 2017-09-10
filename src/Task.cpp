@@ -1,13 +1,14 @@
 #include "Task.hpp"
 #include <iostream>
 
+
 Task::Task (const int& taskId, const seconds& repeatSeconds,
-            std::function<void()>& taskMethod,
-            std::function<void()> taskCompleteCallBack )
+            std::function<duration<double>()> taskMethod,
+            std::function<void(Task_Id,duration<double>)> taskCompleteCallBack )
                 :taskId(taskId), repeatSeconds(repeatSeconds),
                 taskMethod(taskMethod),
                 taskCompleteCallBack (taskCompleteCallBack) {
-
+time = time_point_cast<Time_Point::duration> (steady_clock::now()) + repeatSeconds;
 }
 
 // comparator for std::priority_queue;
@@ -16,11 +17,12 @@ Task:: operator>(const Task &other) const {
     return time > other.time;
 }
 
-// set the next executable time;
+// get the next time point when this task will get executed
 Time_Point
 Task::getNextExecuteTime() const {
-        return time;
+    return time;
 }
+
 
 void
 Task::updateTime() {
@@ -35,4 +37,11 @@ Task::updateTime() {
 void
 Task::modifySchedule (const Time_Point::duration &newRepeatSeconds) {
     repeatSeconds = newRepeatSeconds;
+}
+
+// execute the task passed by user;
+void
+Task::execute() {
+    duration<double> result = taskMethod();
+    taskCompleteCallBack(taskId,result);
 }
