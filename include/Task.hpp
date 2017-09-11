@@ -14,10 +14,14 @@ class Task {
     std::string             taskDescription;
     Time_Point              time;
     Time_Point::duration    repeatSeconds;
+    std::function<void(Task)> task;
     std::function<duration<double>()>  taskMethod;
     std::function<void(Task_Id,duration<double>)>   taskCompleteCallBack;
 
 public:
+
+    Task (const int &taskId, const seconds &repeatSeconds,
+          std::function<void(Task)> task);
 
     Task (const int& taskId, const seconds& repeatSeconds,
     std::function<duration<double>()> taskMethod,

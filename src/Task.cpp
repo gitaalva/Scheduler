@@ -1,6 +1,15 @@
 #include "Task.hpp"
 #include <iostream>
 
+Task::Task (const int& taskId, const seconds& repeatSeconds,
+            std::function<void(Task)> task):taskId (taskId),
+                                        repeatSeconds(repeatSeconds),
+                                        task(task) {
+    time = time_point_cast<Time_Point::duration> (steady_clock::now())
+            + repeatSeconds;
+
+}
+
 
 Task::Task (const int& taskId, const seconds& repeatSeconds,
             std::function<duration<double>()> taskMethod,
@@ -53,8 +62,11 @@ Task::execute () {
 
     std::cout << (log + "\n\n");
     try {
+        /*
         duration<double> result = taskMethod();
-        taskCompleteCallBack(taskId,result);
+        taskCompleteCallBack
+        */
+        task(*this);
     } catch (std::exception &e) {
         std::cerr << "Exception while executing tasks " << e.what() << std::endl;
     }

@@ -14,56 +14,6 @@ using boost::asio::ip::icmp;
 using boost::asio::deadline_timer;
 namespace posix_time = boost::posix_time;
 
-duration<double> tcpConnectToGoogle () {
-    using namespace boost::asio;
-    try {
-        io_service io_service;
-        ip::tcp::resolver resolver(io_service);
-        ip::tcp::resolver::query query("google.com", "80");
-        ip::tcp::resolver::iterator iter = resolver.resolve(query);
-        ip::tcp::resolver::iterator end;
-
-        ip::tcp::socket socket(io_service);
-        boost::system::error_code error = boost::asio::error::host_not_found;
-        steady_clock::time_point start;
-        steady_clock::time_point finish;
-        if (iter != end) {
-            socket.close();
-            start = std::chrono::steady_clock::now();
-            socket.connect(*iter);
-            finish= std::chrono::steady_clock::now();
-        }
-
-        duration<double> diff = finish-start;
-        std::cout << "Time Elapsed while connecting to google every 60 seconds " <<
-                      diff.count() << std::endl;
-        return diff;
-    } catch (std::exception& e) {
-        std::cerr << "Exception while trying to contact google server" << std::endl;
-        std::cerr << e.what() << std::endl;
-        throw;
-    }
-}
-
-void icmpPing() {
-    using namespace boost::asio;
-    io_service io_service;
-    ip::icmp::resolver resolver(io_service);
-    ip::icmp::resolver::query query(icmp::v4(),"google.com", "");
-    ip::icmp::resolver::iterator iter = resolver.resolve(query);
-
-    //std::cout << "Time Elapsed " << diff.count() << std::endl;
-}
-
-static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
-   int i;
-   for(i = 0; i<argc; i++) {
-      printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-   }
-   printf("\n");
-   return 0;
-}
-
 void update_database(Task_Id id, duration<double> result) {
     sqlite3 *conn;
     sqlite3_stmt* stmt = nullptr;
@@ -169,6 +119,59 @@ void update_database(Task_Id id, duration<double> result) {
     sqlite3_close(conn);
 }
 
+void tcpConnectToGoogle (Task task) {
+    using namespace boost::asio;
+    duration<double> result;
+    try {
+        io_service io_service;
+        ip::tcp::resolver resolver(io_service);
+        ip::tcp::resolver::query query("google.com", "80");
+        ip::tcp::resolver::iterator iter = resolver.resolve(query);
+        ip::tcp::resolver::iterator end;
+
+        ip::tcp::socket socket(io_service);
+        boost::system::error_code error = boost::asio::error::host_not_found;
+        steady_clock::time_point start;
+        steady_clock::time_point finish;
+        if (iter != end) {
+            socket.close();
+            start = std::chrono::steady_clock::now();
+            socket.connect(*iter);
+            finish= std::chrono::steady_clock::now();
+        }
+
+         result = finish-start;
+        std::cout << "Time Elapsed while connecting to google every 60 seconds " <<
+                      result.count() << std::endl;
+    } catch (std::exception& e) {
+        std::cerr << "Exception while trying to contact google server" << std::endl;
+        std::cerr << e.what() << std::endl;
+        throw;
+    }
+    update_database (task.getTaskId(),result);
+}
+
+void icmpPing() {
+    using namespace boost::asio;
+    io_service io_service;
+    ip::icmp::resolver resolver(io_service);
+    ip::icmp::resolver::query query(icmp::v4(),"google.com", "");
+    ip::icmp::resolver::iterator iter = resolver.resolve(query);
+
+    //std::cout << "Time Elapsed " << diff.count() << std::endl;
+}
+
+static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
+   int i;
+   for(i = 0; i<argc; i++) {
+      printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+   }
+   printf("\n");
+   return 0;
+}
+
+
+
 void initialize_database() {
     sqlite3 *db;
     int rc;
@@ -227,6 +230,8 @@ void cancelTaskTest () {
             };
 
 }
+
+
 int main() {
 
     int thread_safe = sqlite3_threadsafe();
@@ -244,14 +249,14 @@ int main() {
     s1.start();
 
     // google
-    auto f1 = [](){
+    auto f1 = [](Task task){
                 auto start = std::chrono::steady_clock::now();
                 //std::cout << "Saying what after 35 seconds" << std::endl;
                 auto end = std::chrono::steady_clock::now();
                 return end-start;
               };
 
-    auto f2 = [](){
+    auto f2 = [](Task task){
                auto start = std::chrono::steady_clock::now();
                //std::cout << "Saying what after 10 seconds" << std::endl;
                auto end = std::chrono::steady_clock::now();
@@ -259,9 +264,9 @@ int main() {
               };
 
 
-    Task t1(1,Time_Point::duration(35),f1,update_database);
-    Task t2(2,Time_Point::duration(10),f2,update_database);
-    Task t3(3,Time_Point::duration(60),&tcpConnectToGoogle,update_database);
+    Task t1(1,Time_Point::duration(35),f1);
+    Task t2(2,Time_Point::duration(10),f2);
+    Task t3(3,Time_Point::duration(60),&tcpConnectToGoogle);
 
     s1.addTask(t1);
     s1.addTask(t2);
