@@ -1,3 +1,5 @@
+// Modified by Abhyudaya Alva
+
 //
 // ping.cpp
 // ~~~~~~~~
@@ -21,6 +23,7 @@ using boost::asio::ip::icmp;
 using boost::asio::deadline_timer;
 namespace posix_time = boost::posix_time;
 
+// Modified pinger to suit
 class pinger
 {
 public:

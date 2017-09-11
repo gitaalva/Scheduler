@@ -5,7 +5,6 @@
 
 
 TaskQueue::TaskQueue():stopScheduler(false) {
-    std::cout << "Constructor" << std::endl;
 }
 
 void
@@ -133,6 +132,13 @@ TaskQueue::modifyTask(Task_Id taskId, Time_Point::duration newRepeatTime) {
     std::lock_guard<std::mutex> lk(mu);
     std::cout << "cancelTask()::begin()" << std::endl;
     modifiedTasks[taskId] = newRepeatTime;
+}
+
+// function provided for testing purposes
+std::priority_queue<Task,std::vector<Task>, std::greater<Task> >
+TaskQueue::getTaskQueue() {
+    std::lock_guard<std::mutex> lk(mu);
+    return taskQueue;
 }
 
 // stop the TaskQueue from running

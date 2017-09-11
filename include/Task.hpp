@@ -27,23 +27,25 @@ public:
     std::function<duration<double>()> taskMethod,
     std::function<void(Task_Id,duration<double>)> taskCompleteCallBack );
 
-    const std::string getDescription() const;
+    const std::string getDescription () const;
 
     void setDescription (const std::string&);
 
-    const Task_Id getTaskId(void) const;
+    const Task_Id getTaskId (void) const;
 
     // comparator for std::priority_queue;
-    bool operator>(const Task &other) const;
+    bool operator> (const Task &other) const;
 
     // set the next executable time;
-    Time_Point getNextExecuteTime() const;
+    Time_Point getNextExecuteTime () const;
 
     // updates the time to next execute based on repeat
-    void updateTime();
+    void updateTime ();
 
     // modify the repeat interval
     void modifySchedule (const Time_Point::duration &_repeatSeconds);
+
+    Time_Point::duration getSchedule () const;
 
     // execute the abstract function stored in this task
     void execute();

@@ -52,6 +52,12 @@ Task::modifySchedule (const Time_Point::duration &_repeatSeconds) {
     repeatSeconds = _repeatSeconds;
 }
 
+Time_Point::duration
+Task::getSchedule () const {
+    return repeatSeconds;
+}
+
+
 // execute the task passed by user;
 void
 Task::execute () {

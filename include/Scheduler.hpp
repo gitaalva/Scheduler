@@ -24,6 +24,9 @@ public:
     // stop the scheduler from running
     void stop();
 
+    // only for testing purposes
+    std::priority_queue<Task,std::vector<Task>, std::greater<Task> > getTaskQueue();
+
     // destructor
     ~Scheduler();
 

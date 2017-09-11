@@ -36,6 +36,7 @@ public:
     TaskQueue();
 
     // add a task to the TaskQueue
+    // DO NOT MODIFY THIS TO REFERENCE
     void addTask(Task task);
 
     // remove a task from the TaskQueue
@@ -54,6 +55,9 @@ public:
     void run();
 
     inline Time_Point getCurrentTimeInSeconds();
+
+    // only for testing purposes
+    std::priority_queue<Task,std::vector<Task>, std::greater<Task> > getTaskQueue();
 
     ~TaskQueue();
 };

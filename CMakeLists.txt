@@ -43,8 +43,8 @@ target_link_libraries(Scheduler ${Boost_SYSTEM_LIBRARY})
 
 #FOR BOOST TESTING FRAMEWORK
 # WE ARE GOING TO BUILD A LIBRARY HERE
-set (LIBSOURCES src/Scheduler.cpp src/Task.cpp)
-add_library(TaskScheduler ${LIBSOURCES})
+set (LIBSOURCES src/Scheduler.cpp src/Task.cpp src/TaskQueue.cpp)
+#add_library(TaskScheduler ${LIBSOURCES})
 
 #Setup CMake to run tests
 enable_testing()
@@ -62,12 +62,12 @@ foreach(testSrc ${TEST_SRCS})
         get_filename_component(testName ${testSrc} NAME_WE)
 
         #Add compile target
-        add_executable(${testName} ${testSrc})
+        add_executable(${testName} ${testSrc} ${LIBSOURCES})
 
         #link to Boost libraries AND your targets and dependencies
         target_link_libraries(${testName}
                              ${Boost_LIBRARIES} ${SQLITE3_LIBRARIES}
-                             ${TaskScheduler})
+                             ${Boost_SYSTEM_LIBRARY})
 
         #I like to move testing binaries into a testBin directory
         set_target_properties(${testName} PROPERTIES
