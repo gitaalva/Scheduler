@@ -1,4 +1,3 @@
-/*
 #include <iostream>
 #include <sqlite3.h>
 #include <chrono>
@@ -209,7 +208,7 @@ void initialize_database() {
 void cancelTaskTest () {
     auto f1 = [](){
                 auto start = std::chrono::steady_clock::now();
-                count = 0;
+                int count = 0;
                 for (size_t i=0; i < 1000; ++i) {
                     count += 1;
                 }
@@ -219,7 +218,7 @@ void cancelTaskTest () {
 
     auto f2 = [](){
              auto start = std::chrono::steady_clock::now();
-             count = 0;
+             int count = 0;
              for (size_t i=0; i < 1000; ++i) {
                  count += 1;
              }
@@ -242,7 +241,7 @@ int main() {
     initialize_database();
 
     Scheduler s1;
-    s1.run();
+    s1.start();
 
     // google
     auto f1 = [](){
@@ -283,7 +282,7 @@ int main() {
     std::cout << "Calling s1.stop()" << std::endl;
     s1.stop();
 }
-*/
+/*
 
 //
 // ping.cpp
@@ -320,3 +319,4 @@ int main(int argc, char* argv[])
     std::cerr << "Exception: " << e.what() << std::endl;
   }
 }
+*/

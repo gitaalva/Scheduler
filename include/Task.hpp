@@ -2,15 +2,16 @@
 #define TASK_HPP
 #include <chrono>
 #include <functional>
+#include <string>
 
 using namespace std::chrono;
 typedef time_point<steady_clock, seconds> Time_Point;
 typedef unsigned int Task_Id;
 
-
 class Task {
     // id for the task
     Task_Id                 taskId;
+    std::string             taskDescription;
     Time_Point              time;
     Time_Point::duration    repeatSeconds;
     std::function<duration<double>()>  taskMethod;
@@ -21,6 +22,10 @@ public:
     Task (const int& taskId, const seconds& repeatSeconds,
     std::function<duration<double>()> taskMethod,
     std::function<void(Task_Id,duration<double>)> taskCompleteCallBack );
+
+    const std::string getDescription() const;
+
+    void setDescription (const std::string&);
 
     const Task_Id getTaskId(void) const;
 
