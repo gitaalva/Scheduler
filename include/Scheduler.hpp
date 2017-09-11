@@ -12,13 +12,12 @@ class Scheduler {
     // all threading primitives
     std::mutex mu;
     std::condition_variable cv;
-    std::condition_variable non_empty_wake_up;
-    
+    std::condition_variable allocator_cv;
     std::vector<std::future<void>> pending_futures;
 
     std::thread worker;
     std::thread allocator;
-
+    bool stopScheduler;
     using time_point_t = time_point<steady_clock, seconds>;
     std::priority_queue<Task,std::vector<Task>, std::greater<Task> > taskQueue;
     std::unordered_set<Task_Id> cancelledTasks;
@@ -38,10 +37,10 @@ public:
 
     void jobWorker();
 
-    void jobAllocator();
+    void newJobAllocator();
 
     // stop the scheduler from running
-    void stopScheduler();
+    void stop();
 
     void run();
 

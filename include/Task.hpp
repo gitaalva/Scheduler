@@ -23,6 +23,8 @@ public:
     std::function<duration<double>()> taskMethod,
     std::function<void(Task_Id,duration<double>)> taskCompleteCallBack );
 
+    const Task_Id getTaskId(void) const;
+
     // comparator for std::priority_queue;
     bool operator>(const Task &other) const;
 

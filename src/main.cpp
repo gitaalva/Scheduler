@@ -4,7 +4,7 @@
 #include "boost/asio.hpp"
 #include "Scheduler.hpp"
 #include "Task.hpp"
-
+#include <thread>
 #include <boost/bind.hpp>
 #include <istream>
 #include <iostream>
@@ -16,27 +16,33 @@ namespace posix_time = boost::posix_time;
 
 duration<double> tcpConnectToGoogle () {
     using namespace boost::asio;
-    io_service io_service;
-    ip::tcp::resolver resolver(io_service);
-    ip::tcp::resolver::query query("google.com", "80");
-    ip::tcp::resolver::iterator iter = resolver.resolve(query);
-    ip::tcp::resolver::iterator end;
+    try {
+        io_service io_service;
+        ip::tcp::resolver resolver(io_service);
+        ip::tcp::resolver::query query("google.com", "80");
+        ip::tcp::resolver::iterator iter = resolver.resolve(query);
+        ip::tcp::resolver::iterator end;
 
-    ip::tcp::socket socket(io_service);
-    boost::system::error_code error = boost::asio::error::host_not_found;
-    steady_clock::time_point start;
-    steady_clock::time_point finish;
-    if (iter != end) {
-        socket.close();
-        start = std::chrono::steady_clock::now();
-        socket.connect(*iter);
-        finish= std::chrono::steady_clock::now();
+        ip::tcp::socket socket(io_service);
+        boost::system::error_code error = boost::asio::error::host_not_found;
+        steady_clock::time_point start;
+        steady_clock::time_point finish;
+        if (iter != end) {
+            socket.close();
+            start = std::chrono::steady_clock::now();
+            socket.connect(*iter);
+            finish= std::chrono::steady_clock::now();
+        }
+
+        duration<double> diff = finish-start;
+        std::cout << "Time Elapsed while connecting to google every 60 seconds " <<
+                      diff.count() << std::endl;
+        return diff;
+    } catch (std::exception& e) {
+        std::cerr << "Exception while trying to contact google server" << std::endl;
+        std::cerr << e.what() << std::endl;
+        throw;
     }
-
-    duration<double> diff = finish-start;
-    std::cout << "Time Elapsed while connecting to google every 60 seconds " <<
-                  diff.count() << std::endl;
-    return diff;
 }
 
 void icmpPing() {
@@ -165,7 +171,6 @@ void update_database(Task_Id id, duration<double> result) {
 
 void initialize_database() {
     sqlite3 *db;
-    char *zErrMsg = 0;
     int rc;
 
     if (sqlite3_open("../database/stats.db", &db) == SQLITE_OK) {
@@ -174,7 +179,7 @@ void initialize_database() {
                           "METRIC REAL NOT NULL,"\
                           "TIME DATETIME DEFAULT CURRENT_TIMESTAMP);";
         std::cout << "create table command" << sql1 << std::endl;
-        rc = sqlite3_exec(db, sql1, callback, 0, &zErrMsg);
+        rc = sqlite3_exec(db, sql1, nullptr, nullptr, nullptr);
 
         if (rc != SQLITE_OK) {
             std::cout << "Error while creating table task_metrics" << std::endl;
@@ -189,18 +194,19 @@ void initialize_database() {
                           "TIMESTAMP    DATETIME DEFAULT CURRENT_TIMESTAMP)";
         std::cout << "create table command" << sql2 << std::endl;
 
-        rc = sqlite3_exec(db, sql2, callback, 0, &zErrMsg);
+        rc = sqlite3_exec(db, sql2, nullptr, nullptr, nullptr);
 
         if (rc != SQLITE_OK) {
             std::cout << "Error while creating task_avg_metrics" << std::endl;
         } else {
             std::cout << "Table task_avg_metrics create succes" << std::endl;
         }
-        sqlite3_close(db);
     }
+    sqlite3_close(db);
 }
 
 int main() {
+
     int thread_safe = sqlite3_threadsafe();
     if (thread_safe == 0) {
         std::cout << "sqlite is not threadsafe" << std::endl;
@@ -211,6 +217,7 @@ int main() {
 
     // initialize the database in the beginning
     initialize_database();
+    /*
     sqlite3 *db;
     int rc = sqlite3_open("/Users/abhyudaya/thousandeyes/scheduler/database/stats.db", &db);
     if (rc) {
@@ -218,7 +225,7 @@ int main() {
     } else {
         std::cout << "Successfully opened database" << std::endl;
     }
-
+    */
     Scheduler s1;
     s1.run();
 
@@ -245,4 +252,16 @@ int main() {
     s1.addTask(t2);
     s1.addTask(t3);
 
+    std::cout << "Sleeping for 30 seconds" << std::endl;
+    std::this_thread::sleep_for(seconds(30));
+    std::cout << "Waking up after 30 seconds and let us cancel t1" << std::endl;
+    /*
+    s1.cancelTask(t1.getTaskId());
+    std::this_thread::sleep_for(seconds(30));
+    s1.cancelTask(t2.getTaskId());
+    std::this_thread::sleep_for(seconds(30));
+    s1.cancelTask(t3.getTaskId());
+    */
+    std::cout << "Calling s1.stop()" << std::endl;
+    s1.stop();
 }
