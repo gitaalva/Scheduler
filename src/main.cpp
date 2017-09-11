@@ -2,19 +2,22 @@
 #include <sqlite3.h>
 #include <chrono>
 #include "boost/asio.hpp"
-#include "Scheduler.hpp"
-#include "Task.hpp"
 #include <thread>
 #include <boost/bind.hpp>
 #include <istream>
 #include <iostream>
 #include <ostream>
 
+#include "Ping.hpp"
+#include "Scheduler.hpp"
+#include "Task.hpp"
+
 using boost::asio::ip::icmp;
 using boost::asio::deadline_timer;
 namespace posix_time = boost::posix_time;
 
-void update_database(Task_Id id, duration<double> result) {
+void update_database(Task_Id id, duration<double> value) {
+    std::chrono::milliseconds result = std::chrono::duration_cast<std::chrono::milliseconds>(value);
     sqlite3 *conn;
     sqlite3_stmt* stmt = nullptr;
 
@@ -76,7 +79,10 @@ void update_database(Task_Id id, duration<double> result) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             count = sqlite3_column_int(stmt,0);
             average = sqlite3_column_double(stmt,1);
+            std::cout << "old average " << average << " sample count " << count << std::endl;
             average = ((count*average) + result.count())/(count+1);
+            std::cout << "new val " << result.count() << std::endl;
+            std::cout << "new avg " << average << std::endl;
             ++count;
         } else {
             count = 1;
@@ -140,9 +146,11 @@ void tcpConnectToGoogle (Task task) {
             finish= std::chrono::steady_clock::now();
         }
 
-         result = finish-start;
-        std::cout << "Time Elapsed while connecting to google every 60 seconds " <<
-                      result.count() << std::endl;
+        result = finish-start;
+        std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(result);
+        std::cout << "Time Elapsed while sending tcp packet to google " <<
+                      ms.count() << "ms" << std::endl;
+
     } catch (std::exception& e) {
         std::cerr << "Exception while trying to contact google server" << std::endl;
         std::cerr << e.what() << std::endl;
@@ -151,25 +159,24 @@ void tcpConnectToGoogle (Task task) {
     update_database (task.getTaskId(),result);
 }
 
-void icmpPing() {
-    using namespace boost::asio;
-    io_service io_service;
-    ip::icmp::resolver resolver(io_service);
-    ip::icmp::resolver::query query(icmp::v4(),"google.com", "");
-    ip::icmp::resolver::iterator iter = resolver.resolve(query);
+void icmpPing (Task task) {
+    duration<double> result;
+    try {
+        boost::asio::io_service io_service;
+        pinger p(io_service, "google.com");
+        io_service.run();
+        result = p.getDuration();
+        std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(result);
+        std::cout << "Time Elapsed while sending icmp packet to google " <<
+                      ms.count() << "ms" << std::endl;
+    } catch (std::exception& e) {
+        std::cerr << "Exception while sending icmp packets to google" << std::endl;
+        std::cerr << e.what() << std::endl;
+        throw;
+    }
 
-    //std::cout << "Time Elapsed " << diff.count() << std::endl;
+    update_database(task.getTaskId(),result);
 }
-
-static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
-   int i;
-   for(i = 0; i<argc; i++) {
-      printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-   }
-   printf("\n");
-   return 0;
-}
-
 
 
 void initialize_database() {
@@ -200,35 +207,12 @@ void initialize_database() {
         rc = sqlite3_exec(db, sql2, nullptr, nullptr, nullptr);
 
         if (rc != SQLITE_OK) {
-            std::cout << "Error while creating task_avg_metrics" << std::endl;
+            std::cerr << "Error while creating task_avg_metrics" << std::endl;
         } else {
-            std::cout << "Table task_avg_metrics create succes" << std::endl;
+            std::cerr << "Table task_avg_metrics create succes" << std::endl;
         }
     }
     sqlite3_close(db);
-}
-
-void cancelTaskTest () {
-    auto f1 = [](){
-                auto start = std::chrono::steady_clock::now();
-                int count = 0;
-                for (size_t i=0; i < 1000; ++i) {
-                    count += 1;
-                }
-                auto end = std::chrono::steady_clock::now();
-                return end-start;
-              };
-
-    auto f2 = [](){
-             auto start = std::chrono::steady_clock::now();
-             int count = 0;
-             for (size_t i=0; i < 1000; ++i) {
-                 count += 1;
-             }
-             auto end = std::chrono::steady_clock::now();
-             return end-start;
-            };
-
 }
 
 
@@ -236,10 +220,10 @@ int main() {
 
     int thread_safe = sqlite3_threadsafe();
     if (thread_safe == 0) {
-        std::cout << "sqlite is not threadsafe" << std::endl;
+        std::clog << "sqlite is not threadsafe" << std::endl;
         abort();
     } else {
-        std::cout << "sqlite is threadsafe" << std::endl;
+        std::clog << "sqlite is threadsafe" << std::endl;
     }
 
     // initialize the database in the beginning
@@ -248,80 +232,19 @@ int main() {
     Scheduler s1;
     s1.start();
 
-    // google
-    auto f1 = [](Task task){
-                auto start = std::chrono::steady_clock::now();
-                //std::cout << "Saying what after 35 seconds" << std::endl;
-                auto end = std::chrono::steady_clock::now();
-                return end-start;
-              };
-
-    auto f2 = [](Task task){
-               auto start = std::chrono::steady_clock::now();
-               //std::cout << "Saying what after 10 seconds" << std::endl;
-               auto end = std::chrono::steady_clock::now();
-               return end-start;
-              };
-
-
-    Task t1(1,Time_Point::duration(35),f1);
-    Task t2(2,Time_Point::duration(10),f2);
-    Task t3(3,Time_Point::duration(60),&tcpConnectToGoogle);
+    Task t1(3,Time_Point::duration(20),&tcpConnectToGoogle);
+    Task t2(4,Time_Point::duration(30),&icmpPing);
 
     s1.addTask(t1);
     s1.addTask(t2);
-    s1.addTask(t3);
 
-    std::cout << "Sleeping for 30 seconds" << std::endl;
-    std::this_thread::sleep_for(seconds(30));
-    std::cout << "Waking up after 30 seconds and let us cancel t1" << std::endl;
+    std::cout << "Sleeping for 100 seconds" << std::endl;
+    std::this_thread::sleep_for(seconds(100));
 
-    s1.modifyTask (t2.getTaskId(), Time_Point::duration(100));
-    std::this_thread::sleep_for(seconds(60));
-    s1.cancelTask(t1.getTaskId());
-    std::this_thread::sleep_for(seconds(30));
-    s1.cancelTask(t2.getTaskId());
-    std::this_thread::sleep_for(seconds(30));
-    s1.cancelTask(t3.getTaskId());
+    std::cout << "Modifying tcp to google schedule from every 20 sec to 60 sec\n\n\n" << std::endl;
+    s1.modifyTask(t1.getTaskId(),Time_Point::duration(60));
 
-    std::cout << "Calling s1.stop()" << std::endl;
+    std::this_thread::sleep_for(seconds(200));
+    std::clog << "Calling s1.stop()" << std::endl;
     s1.stop();
 }
-/*
-
-//
-// ping.cpp
-// ~~~~~~~~
-//
-// Copyright (c) 2003-2012 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-
-#include "Ping.hpp"
-#include <iostream>
-
-int main(int argc, char* argv[])
-{
-  try
-  {
-    if (argc != 2)
-    {
-      std::cerr << "Usage: ping <host>" << std::endl;
-#if !defined(BOOST_WINDOWS)
-      std::cerr << "(You may need to run this program as root.)" << std::endl;
-#endif
-      return 1;
-    }
-
-    boost::asio::io_service io_service;
-    pinger p(io_service, argv[1]);
-    io_service.run();
-  }
-  catch (std::exception& e)
-  {
-    std::cerr << "Exception: " << e.what() << std::endl;
-  }
-}
-*/

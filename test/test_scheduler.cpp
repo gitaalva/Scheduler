@@ -17,11 +17,12 @@
 
 #include "Scheduler.hpp"
 #include "Task.hpp"
+#include "Ping.hpp"
 //VERY IMPORTANT - include this last
 #include <boost/test/unit_test.hpp>
 
-// helper to update database
-void update_database(Task_Id id, duration<double> result) {
+void update_database(Task_Id id, duration<double> value) {
+    std::chrono::milliseconds result = std::chrono::duration_cast<std::chrono::milliseconds>(value);
     sqlite3 *conn;
     sqlite3_stmt* stmt = nullptr;
 
@@ -83,7 +84,10 @@ void update_database(Task_Id id, duration<double> result) {
         if (sqlite3_step(stmt) == SQLITE_ROW) {
             count = sqlite3_column_int(stmt,0);
             average = sqlite3_column_double(stmt,1);
+            std::cout << "old average " << average << " sample count " << count << std::endl;
             average = ((count*average) + result.count())/(count+1);
+            std::cout << "new val " << result.count() << std::endl;
+            std::cout << "new avg " << average << std::endl;
             ++count;
         } else {
             count = 1;
@@ -195,6 +199,25 @@ void initialize_database() {
     sqlite3_close(db);
 }
 
+void icmpPing (Task task) {
+    duration<double> result;
+    try {
+        boost::asio::io_service io_service;
+        pinger p(io_service, "google.com");
+        io_service.run();
+        result = p.getDuration();
+        std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(result);
+        std::cout << "Time Elapsed while sending icmp packet to google " <<
+                      ms.count() << "ms" << std::endl;
+    } catch (std::exception& e) {
+        std::cerr << "Exception while sending icmp packets to google" << std::endl;
+        std::cerr << e.what() << std::endl;
+        throw;
+    }
+
+    update_database(task.getTaskId(),result);
+}
+
 using TQ = std::priority_queue<Task,std::vector<Task>, std::greater<Task> >;
 // ------------- Tests Follow --------------
 BOOST_AUTO_TEST_CASE( constructors )
@@ -223,10 +246,12 @@ BOOST_AUTO_TEST_CASE( addTask ) {
     Task t1(1,Time_Point::duration(35),f1);
     Task t2(2,Time_Point::duration(10),f1);
     Task t3(3,Time_Point::duration(60),&tcpConnectToGoogle);
+    Task t2(4,Time_Point::duration(30),&icmpPing);
 
     s1.addTask(t1);
     s1.addTask(t2);
     s1.addTask(t3);
+    s1.addTask(t4);
 
     // give some time for the scheduler to add task;
     std::this_thread::sleep_for(seconds(30));
@@ -260,10 +285,12 @@ BOOST_AUTO_TEST_CASE( modifyTask ) {
     Task t1(1,Time_Point::duration(35),f1);
     Task t2(2,Time_Point::duration(10),f1);
     Task t3(3,Time_Point::duration(60),&tcpConnectToGoogle);
+    Task t2(4,Time_Point::duration(30),&icmpPing);
 
     s1.addTask(t1);
     s1.addTask(t2);
     s1.addTask(t3);
+    s1.addTask(t4);
 
     // give some time for the scheduler to add task;
     // wait for every task to be executed once
@@ -303,11 +330,12 @@ BOOST_AUTO_TEST_CASE( cancelTask ) {
     Task t1(1,Time_Point::duration(35),f1);
     Task t2(2,Time_Point::duration(10),f1);
     Task t3(3,Time_Point::duration(60),&tcpConnectToGoogle);
+    Task t2(4,Time_Point::duration(30),&icmpPing);
 
     s1.addTask(t1);
     s1.addTask(t2);
     s1.addTask(t3);
-
+    s1.addTask(t4);
     // give some time for the scheduler to add task;
     // wait for every task to be executed once
     std::this_thread::sleep_for(seconds(90));

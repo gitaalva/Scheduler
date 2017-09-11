@@ -8,35 +8,13 @@
 #include "Task.hpp"
 
 using namespace std::chrono;
+
 class TaskQueue {
-    // mutex to synchronize access to priorityQueue
-    std::mutex mu;
-
-    // conditional variable for the job allocator to notify worker
-    std::condition_variable cv;
-
-    // to notify the job allocator when it is sleeping
-    // if  a new task is added or if it has to shut down
-    std::condition_variable allocator_cv;
-
-    std::thread worker;
-    std::thread allocator;
-    bool stopScheduler;
-
-    // priorityQueue to get the next task;
-    std::priority_queue<Task,std::vector<Task>, std::greater<Task> > taskQueue;
-
-    // set that holds the list of tasks that should be cancelled;
-    std::unordered_set<Task_Id> cancelledTasks;
-
-    // tasks in priorityQueue whose schedule has to be modified
-    std::unordered_map<Task_Id,Time_Point::duration> modifiedTasks;
 public:
     // default constructor
     TaskQueue();
 
     // add a task to the TaskQueue
-    // DO NOT MODIFY THIS TO REFERENCE
     void addTask(Task task);
 
     // remove a task from the TaskQueue
@@ -60,5 +38,29 @@ public:
     std::priority_queue<Task,std::vector<Task>, std::greater<Task> > getTaskQueue();
 
     ~TaskQueue();
+
+private:
+    // mutex to synchronize access to priorityQueue
+    std::mutex mu;
+
+    // conditional variable for the job allocator to notify worker
+    std::condition_variable cv;
+
+    // to notify the job allocator when it is sleeping
+    // if  a new task is added or if it has to shut down
+    std::condition_variable allocator_cv;
+
+    std::thread worker;
+    std::thread allocator;
+    bool stopScheduler;
+
+    // priorityQueue to get the next task;
+    std::priority_queue<Task,std::vector<Task>, std::greater<Task> > taskQueue;
+
+    // set that holds the list of tasks that should be cancelled;
+    std::unordered_set<Task_Id> cancelledTasks;
+
+    // tasks in priorityQueue whose schedule has to be modified
+    std::unordered_map<Task_Id,Time_Point::duration> modifiedTasks;
 };
 #endif

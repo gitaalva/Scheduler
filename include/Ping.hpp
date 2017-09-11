@@ -15,6 +15,7 @@
 #include <istream>
 #include <iostream>
 #include <ostream>
+#include <chrono>
 
 #include "icmp_header.hpp"
 #include "ipv4_header.hpp"
@@ -23,6 +24,7 @@ using boost::asio::ip::icmp;
 using boost::asio::deadline_timer;
 namespace posix_time = boost::posix_time;
 
+using namespace std::chrono;
 // Modified pinger to suit
 class pinger
 {
@@ -38,6 +40,11 @@ public:
     start_send();
     start_receive();
   }
+
+std::chrono::duration<double> getDuration() {
+      duration<double> result = end-start;
+      return result;
+}
 
 private:
   void start_send()
@@ -59,6 +66,7 @@ private:
 
     // Send the request.
     time_sent_ = posix_time::microsec_clock::universal_time();
+    start = std::chrono::steady_clock::now();
     socket_.send_to(request_buffer.data(), destination_);
 
     // Wait up to five seconds for a reply.
@@ -111,6 +119,8 @@ private:
         timer_.cancel();
 
       // Print out some information about the reply packet.
+      end = std::chrono::steady_clock::now();
+
       posix_time::ptime now = posix_time::microsec_clock::universal_time();
       std::cout << length - ipv4_hdr.header_length()
         << " bytes from " << ipv4_hdr.source_address()
@@ -122,6 +132,8 @@ private:
     io_service_ref.stop();
     //start_receive();
   }
+
+
 
   static unsigned short get_identifier()
   {
@@ -138,6 +150,8 @@ private:
   deadline_timer timer_;
   unsigned short sequence_number_;
   posix_time::ptime time_sent_;
+  steady_clock::time_point start;
+  steady_clock::time_point end;
   boost::asio::streambuf reply_buffer_;
   std::size_t num_replies_;
   boost::asio::io_service &io_service_ref;

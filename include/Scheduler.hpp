@@ -3,6 +3,7 @@
 #include <queue>
 #include "Task.hpp"
 #include "TaskQueue.hpp"
+#include <memory>
 
 class Scheduler {
 public:
@@ -31,6 +32,6 @@ public:
     ~Scheduler();
 
 private:
-    TaskQueue *taskQueue;
+    std::unique_ptr<TaskQueue> taskQueue;
 };
 #endif

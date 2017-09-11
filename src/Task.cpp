@@ -5,8 +5,7 @@ Task::Task (const int& taskId, const seconds& repeatSeconds,
             std::function<void(Task)> task):taskId (taskId),
                                         repeatSeconds(repeatSeconds),
                                         task(task) {
-    time = time_point_cast<Time_Point::duration> (steady_clock::now())
-            + repeatSeconds;
+    time = time_point_cast<Time_Point::duration> (steady_clock::now());
 
 }
 
@@ -39,11 +38,11 @@ Task::getNextExecuteTime () const {
 
 void
 Task::updateTime () {
-    std::cout << "updateTime()::id and previous time was" <<
-                taskId << " " << time.time_since_epoch().count() << std::endl;
+    //std::cout << "updateTime()::id and previous time was " <<
+    //            taskId << " " << time.time_since_epoch().count() << std::endl;
     time += repeatSeconds;
-    std::cout << "updateTime()::id and next time is" << taskId <<
-                " " << time.time_since_epoch().count() << std::endl;
+    //std::cout << "updateTime()::id and next time is " << taskId <<
+    //            " " << time.time_since_epoch().count() << std::endl;
 }
 
 // modify the repeat interval
@@ -63,15 +62,11 @@ void
 Task::execute () {
     auto now = system_clock::to_time_t(system_clock::now());
     std::string log = "Time " + std::string (std::ctime(&now));
-    log +=  "Running task" + std::to_string(taskId) + "every " +
-            std::to_string (repeatSeconds.count()) + "seconds";
+    log +=  "Running task " + std::to_string(taskId) + " every " +
+            std::to_string (repeatSeconds.count()) + " seconds";
 
     std::cout << (log + "\n\n");
     try {
-        /*
-        duration<double> result = taskMethod();
-        taskCompleteCallBack
-        */
         task(*this);
     } catch (std::exception &e) {
         std::cerr << "Exception while executing tasks " << e.what() << std::endl;

@@ -40,5 +40,5 @@ Scheduler::stop() {
 }
 
 Scheduler::~Scheduler() {
-    delete taskQueue;
+    taskQueue->stop();
 }

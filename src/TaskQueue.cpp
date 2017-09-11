@@ -74,9 +74,6 @@ TaskQueue::jobWorker() {
 
 void
 TaskQueue::jobAllocator() {
-    //let us forget about how we are waking up the thread for now
-    // let me assume that I have an allocator conditional variable
-    // name allocator_cv;
     while (true) {
         std::unique_lock<std::mutex> lk((mu));
         // if there is no task in the queue then wait until a day a stop signal
@@ -127,6 +124,7 @@ TaskQueue::cancelTask(Task_Id taskId) {
     cancelledTasks.insert(taskId);
 }
 
+// modify the schedule of currently running task
 void
 TaskQueue::modifyTask(Task_Id taskId, Time_Point::duration newRepeatTime) {
     std::lock_guard<std::mutex> lk(mu);
