@@ -9,7 +9,6 @@ typedef unsigned int Task_Id;
 
 
 class Task {
-
     // id for the task
     Task_Id                 taskId;
     Time_Point              time;
@@ -35,7 +34,7 @@ public:
     void updateTime();
 
     // modify the repeat interval
-    void modifySchedule (const Time_Point::duration &newRepeatSeconds);
+    void modifySchedule (const Time_Point::duration &_repeatSeconds);
 
     // execute the abstract function stored in this task
     void execute();

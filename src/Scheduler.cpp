@@ -10,34 +10,10 @@ Scheduler::Scheduler():stopScheduler(false) {
 
 void
 Scheduler::run() {
-    allocator = std::thread([&]() { newJobAllocator(); });
+    allocator = std::thread([&]() { jobAllocator(); });
     worker = std::thread([&](){ jobWorker(); });
 }
-/*
-void
-Scheduler::addTask(Task task) {
-    std::unique_lock<std::mutex> lk((mu));
-    if (!taskQueue.empty()) {
-        auto top = taskQueue.top();
-        taskQueue.push(task);
-        // asynchronously wake up worker if the timeOut is less than
-        // the timeOut in the next thread
-        if (top.getNextExecuteTime() > task.getNextExecuteTime()) {
-            auto f = std::async (std::launch::async,[&]() {
-                std::cout << "Sleeping for a while" << std::endl;
-                std::this_thread::sleep_until(task.getNextExecuteTime());
-                std::cout << "Done sleeping notify worker" << std::endl;
-                cv.notify_one();
-            });
-        }
-    } else {
-        taskQueue.push(task);
-        lk.unlock();
-        non_empty_wake_up.notify_one();
-        return;
-    }
-}
-*/
+
 void
 Scheduler::addTask(Task task) {
     std::unique_lock<std::mutex> lk((mu));
@@ -73,7 +49,14 @@ Scheduler::jobWorker() {
         Task toExecute = taskQueue.top();
         taskQueue.pop();
         // check if the task is cancelled, else perform the task
-        if (cancelledTasks.find(toExecute.getTaskId()) == cancelledTasks.end()) {
+        const Task_Id &taskId = toExecute.getTaskId();
+        if (cancelledTasks.find(taskId) == cancelledTasks.end()) {
+            if (modifiedTasks.find(taskId) != modifiedTasks.end()) {
+                std::cout << "TaskID " + std::to_string(taskId) + "schedule "
+                  + "modified to "+std::to_string (modifiedTasks[taskId].count())
+                  +"\n";
+                toExecute.modifySchedule(modifiedTasks[taskId]);
+            }
             toExecute.updateTime();
             locker.unlock();
 
@@ -85,12 +68,13 @@ Scheduler::jobWorker() {
             // cancelling it.
             std::cout << "Task has been cancelled" + std::to_string(toExecute.getTaskId()) << std::endl;
             cancelledTasks.erase (toExecute.getTaskId());
+            locker.unlock();
         }
     }
 }
 
 void
-Scheduler::newJobAllocator() {
+Scheduler::jobAllocator() {
     //let us forget about how we are waking up the thread for now
     // let me assume that I have an allocator conditional variable
     // name allocator_cv;
@@ -129,27 +113,13 @@ Scheduler::newJobAllocator() {
         lk.unlock();
     }
 }
-// allocator that allocates objects
-/*
-void
-Scheduler::jobAllocator() {
-    while (true) {
-        std::unique_lock<std::mutex> lk((mu));
-        if (taskQueue.empty()) {
-            non_empty_wake_up.wait(lk, [&]() {return !taskQueue.empty();});
-        }
-        auto top = taskQueue.top();
-        lk.unlock();
-        std::this_thread::sleep_until(top.getNextExecuteTime());
-        cv.notify_one();
-    }
-}
-*/
+
 inline Time_Point
 Scheduler::getCurrentTimeInSeconds()
 {
     return time_point_cast<time_point_t::duration> (steady_clock::now());
 }
+
 // remove a task from the scheduler
 void
 Scheduler::cancelTask(Task_Id taskId) {
@@ -160,7 +130,9 @@ Scheduler::cancelTask(Task_Id taskId) {
 
 void
 Scheduler::modifyTask(Task_Id taskId, Time_Point::duration newRepeatTime) {
+    std::lock_guard<std::mutex> lk(mu);
     std::cout << "cancelTask()::begin()" << std::endl;
+    modifiedTasks[taskId] = newRepeatTime;
 }
 
 // stop the scheduler from running
@@ -174,8 +146,6 @@ Scheduler::stop() {
 }
 
 Scheduler::~Scheduler() {
-
     worker.join();
     allocator.join();
-
 }

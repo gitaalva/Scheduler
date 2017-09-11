@@ -28,7 +28,6 @@ Task::getNextExecuteTime () const {
     return time;
 }
 
-
 void
 Task::updateTime () {
     std::cout << "updateTime()::id and previous time was" <<
@@ -40,13 +39,19 @@ Task::updateTime () {
 
 // modify the repeat interval
 void
-Task::modifySchedule (const Time_Point::duration &newRepeatSeconds) {
-    repeatSeconds = newRepeatSeconds;
+Task::modifySchedule (const Time_Point::duration &_repeatSeconds) {
+    repeatSeconds = _repeatSeconds;
 }
 
 // execute the task passed by user;
 void
 Task::execute () {
+    auto now = system_clock::to_time_t(system_clock::now());
+    std::string log = "Time " + std::string (std::ctime(&now));
+    log +=  "Running task" + std::to_string(taskId) + "every " +
+            std::to_string (repeatSeconds.count()) + "seconds";
+
+    std::cout << (log + "\n\n");
     try {
         duration<double> result = taskMethod();
         taskCompleteCallBack(taskId,result);

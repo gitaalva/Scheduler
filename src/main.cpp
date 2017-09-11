@@ -1,3 +1,4 @@
+/*
 #include <iostream>
 #include <sqlite3.h>
 #include <chrono>
@@ -205,6 +206,28 @@ void initialize_database() {
     sqlite3_close(db);
 }
 
+void cancelTaskTest () {
+    auto f1 = [](){
+                auto start = std::chrono::steady_clock::now();
+                count = 0;
+                for (size_t i=0; i < 1000; ++i) {
+                    count += 1;
+                }
+                auto end = std::chrono::steady_clock::now();
+                return end-start;
+              };
+
+    auto f2 = [](){
+             auto start = std::chrono::steady_clock::now();
+             count = 0;
+             for (size_t i=0; i < 1000; ++i) {
+                 count += 1;
+             }
+             auto end = std::chrono::steady_clock::now();
+             return end-start;
+            };
+
+}
 int main() {
 
     int thread_safe = sqlite3_threadsafe();
@@ -217,28 +240,21 @@ int main() {
 
     // initialize the database in the beginning
     initialize_database();
-    /*
-    sqlite3 *db;
-    int rc = sqlite3_open("/Users/abhyudaya/thousandeyes/scheduler/database/stats.db", &db);
-    if (rc) {
-        std::cout << "Failed to open database" << std::endl;
-    } else {
-        std::cout << "Successfully opened database" << std::endl;
-    }
-    */
+
     Scheduler s1;
     s1.run();
 
     // google
     auto f1 = [](){
                 auto start = std::chrono::steady_clock::now();
-                std::cout << "Saying what after 35 seconds" << std::endl;
+                //std::cout << "Saying what after 35 seconds" << std::endl;
                 auto end = std::chrono::steady_clock::now();
                 return end-start;
               };
+
     auto f2 = [](){
                auto start = std::chrono::steady_clock::now();
-               std::cout << "Saying what after 10 seconds" << std::endl;
+               //std::cout << "Saying what after 10 seconds" << std::endl;
                auto end = std::chrono::steady_clock::now();
                return end-start;
               };
@@ -255,13 +271,52 @@ int main() {
     std::cout << "Sleeping for 30 seconds" << std::endl;
     std::this_thread::sleep_for(seconds(30));
     std::cout << "Waking up after 30 seconds and let us cancel t1" << std::endl;
-    /*
+
+    s1.modifyTask (t2.getTaskId(), Time_Point::duration(100));
+    std::this_thread::sleep_for(seconds(60));
     s1.cancelTask(t1.getTaskId());
     std::this_thread::sleep_for(seconds(30));
     s1.cancelTask(t2.getTaskId());
     std::this_thread::sleep_for(seconds(30));
     s1.cancelTask(t3.getTaskId());
-    */
+
     std::cout << "Calling s1.stop()" << std::endl;
     s1.stop();
+}
+*/
+
+//
+// ping.cpp
+// ~~~~~~~~
+//
+// Copyright (c) 2003-2012 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+
+#include "Ping.hpp"
+#include <iostream>
+
+int main(int argc, char* argv[])
+{
+  try
+  {
+    if (argc != 2)
+    {
+      std::cerr << "Usage: ping <host>" << std::endl;
+#if !defined(BOOST_WINDOWS)
+      std::cerr << "(You may need to run this program as root.)" << std::endl;
+#endif
+      return 1;
+    }
+
+    boost::asio::io_service io_service;
+    pinger p(io_service, argv[1]);
+    io_service.run();
+  }
+  catch (std::exception& e)
+  {
+    std::cerr << "Exception: " << e.what() << std::endl;
+  }
 }

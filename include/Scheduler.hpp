@@ -37,7 +37,7 @@ public:
 
     void jobWorker();
 
-    void newJobAllocator();
+    void jobAllocator();
 
     // stop the scheduler from running
     void stop();
