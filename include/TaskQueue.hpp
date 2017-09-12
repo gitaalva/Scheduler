@@ -8,7 +8,7 @@
 #include "Task.hpp"
 
 using namespace std::chrono;
-
+namespace sch {
 class TaskQueue {
 public:
     // default constructor
@@ -63,4 +63,5 @@ private:
     // tasks in priorityQueue whose schedule has to be modified
     std::unordered_map<Task_Id,Time_Point::duration> modifiedTasks;
 };
+}
 #endif

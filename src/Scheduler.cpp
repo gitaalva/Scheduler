@@ -3,7 +3,7 @@
 #include "Scheduler.hpp"
 #include "thread_guard.hpp"
 
-
+namespace sch {
 Scheduler::Scheduler():taskQueue(new TaskQueue()) {
 
 }
@@ -23,6 +23,7 @@ Scheduler::cancelTask(const Task_Id &taskId) {
     taskQueue->cancelTask(taskId);
 }
 
+// modify the schedule of a task
 void
 Scheduler::modifyTask(const Task_Id &taskId,
                       const Time_Point::duration &newRepeatTime) {
@@ -42,3 +43,5 @@ Scheduler::stop() {
 Scheduler::~Scheduler() {
     taskQueue->stop();
 }
+
+} // namespace sch

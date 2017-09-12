@@ -21,7 +21,7 @@
 //VERY IMPORTANT - include this last
 #include <boost/test/unit_test.hpp>
 
-void update_database(Task_Id id, duration<double> value) {
+void update_database(sch::Task_Id id, duration<double> value) {
     std::chrono::milliseconds result = std::chrono::duration_cast<std::chrono::milliseconds>(value);
     sqlite3 *conn;
     sqlite3_stmt* stmt = nullptr;
@@ -131,7 +131,7 @@ void update_database(Task_Id id, duration<double> value) {
 }
 
 // tcp connect to google and update database
-void tcpConnectToGoogle (Task task) {
+void tcpConnectToGoogle (sch::Task task) {
     using namespace boost::asio;
     duration<double> result;
     try {
@@ -199,7 +199,7 @@ void initialize_database() {
     sqlite3_close(db);
 }
 
-void icmpPing (Task task) {
+void icmpPing (sch::Task task) {
     duration<double> result;
     try {
         boost::asio::io_service io_service;
@@ -218,7 +218,7 @@ void icmpPing (Task task) {
     update_database(task.getTaskId(),result);
 }
 
-using TQ = std::priority_queue<Task,std::vector<Task>, std::greater<Task> >;
+using TQ = std::priority_queue<sch::Task,std::vector<sch::Task>, std::greater<sch::Task> >;
 // ------------- Tests Follow --------------
 BOOST_AUTO_TEST_CASE( constructors )
 {
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE( constructors )
 }
 
 // function random function
-auto f1 = [](Task task) {
+auto f1 = [](sch::Task task) {
             auto start = std::chrono::steady_clock::now();
             int count = 0;
             int value = 0;
@@ -241,12 +241,12 @@ auto f1 = [](Task task) {
 
 
 BOOST_AUTO_TEST_CASE( addTask ) {
-    Scheduler s1;
+    sch::Scheduler s1;
     s1.start();
-    Task t1(1,Time_Point::duration(35),f1);
-    Task t2(2,Time_Point::duration(10),f1);
-    Task t3(3,Time_Point::duration(60),&tcpConnectToGoogle);
-    Task t2(4,Time_Point::duration(30),&icmpPing);
+    sch::Task t1(1,sch::Time_Point::duration(35),f1);
+    sch::Task t2(2,sch::Time_Point::duration(10),f1);
+    sch::Task t3(3,sch::Time_Point::duration(60),&tcpConnectToGoogle);
+    sch::Task t4(4,sch::Time_Point::duration(30),&icmpPing);
 
     s1.addTask(t1);
     s1.addTask(t2);
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE( addTask ) {
     std::this_thread::sleep_for(seconds(30));
     TQ taskQueue = s1.getTaskQueue();
 
-    std::unordered_set<Task_Id> existingTasks;
+    std::unordered_set<sch::Task_Id> existingTasks;
     while (!taskQueue.empty()) {
         auto top = taskQueue.top();
         taskQueue.pop();
@@ -280,12 +280,12 @@ BOOST_AUTO_TEST_CASE( addTask ) {
 
 BOOST_AUTO_TEST_CASE( modifyTask ) {
 
-    Scheduler s1;
+    sch::Scheduler s1;
     s1.start();
-    Task t1(1,Time_Point::duration(35),f1);
-    Task t2(2,Time_Point::duration(10),f1);
-    Task t3(3,Time_Point::duration(60),&tcpConnectToGoogle);
-    Task t2(4,Time_Point::duration(30),&icmpPing);
+    sch::Task t1(1,sch::Time_Point::duration(35),f1);
+    sch::Task t2(2,sch::Time_Point::duration(10),f1);
+    sch::Task t3(3,sch::Time_Point::duration(60),&tcpConnectToGoogle);
+    sch::Task t4(4,sch::Time_Point::duration(30),&icmpPing);
 
     s1.addTask(t1);
     s1.addTask(t2);
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE( modifyTask ) {
 
     // modifying Task
     std::cout << "Modifying task" << std::endl;
-    s1.modifyTask(t2.getTaskId(), Time_Point::duration(80));
+    s1.modifyTask(t2.getTaskId(), sch::Time_Point::duration(80));
     std::cout << "Modifying task done" << std::endl;
     // wait for the scheduler to modify the scheduler
     // the scheduler modifies the schedule the next time the task is run
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE( modifyTask ) {
         auto top = taskQueue.top();
         taskQueue.pop();
         if (top.getTaskId() == t2.getTaskId() &&
-             top.getSchedule() == Time_Point::duration(80)) {
+             top.getSchedule() == sch::Time_Point::duration(80)) {
                  success = true;
                  break;
              }
@@ -325,12 +325,12 @@ BOOST_AUTO_TEST_CASE( modifyTask ) {
 
 BOOST_AUTO_TEST_CASE( cancelTask ) {
 
-    Scheduler s1;
+    sch::Scheduler s1;
     s1.start();
-    Task t1(1,Time_Point::duration(35),f1);
-    Task t2(2,Time_Point::duration(10),f1);
-    Task t3(3,Time_Point::duration(60),&tcpConnectToGoogle);
-    Task t2(4,Time_Point::duration(30),&icmpPing);
+    sch::Task t1(1,sch::Time_Point::duration(35),f1);
+    sch::Task t2(2,sch::Time_Point::duration(10),f1);
+    sch::Task t3(3,sch::Time_Point::duration(60),&tcpConnectToGoogle);
+    sch::Task t4(4,sch::Time_Point::duration(30),&icmpPing);
 
     s1.addTask(t1);
     s1.addTask(t2);

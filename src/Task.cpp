@@ -1,6 +1,7 @@
 #include "Task.hpp"
 #include <iostream>
 
+namespace sch {
 Task::Task (const int& taskId, const seconds& repeatSeconds,
             std::function<void(Task)> task):taskId (taskId),
                                         repeatSeconds(repeatSeconds),
@@ -71,4 +72,5 @@ Task::execute () {
     } catch (std::exception &e) {
         std::cerr << "Exception while executing tasks " << e.what() << std::endl;
     }
+}
 }

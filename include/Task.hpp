@@ -4,6 +4,8 @@
 #include <functional>
 #include <string>
 
+namespace sch {
+
 using namespace std::chrono;
 typedef time_point<steady_clock, seconds> Time_Point;
 typedef unsigned int Task_Id;
@@ -51,4 +53,5 @@ public:
     void execute();
 
 };
+}
 #endif

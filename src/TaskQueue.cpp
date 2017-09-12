@@ -3,7 +3,7 @@
 #include "TaskQueue.hpp"
 #include "thread_guard.hpp"
 
-
+namespace sch {
 TaskQueue::TaskQueue():stopScheduler(false) {
 }
 
@@ -152,4 +152,6 @@ TaskQueue::stop() {
 TaskQueue::~TaskQueue() {
     worker.join();
     allocator.join();
+}
+
 }

@@ -5,6 +5,7 @@
 #include "TaskQueue.hpp"
 #include <memory>
 
+namespace sch {
 class Scheduler {
 public:
 
@@ -34,4 +35,5 @@ public:
 private:
     std::unique_ptr<TaskQueue> taskQueue;
 };
+}
 #endif

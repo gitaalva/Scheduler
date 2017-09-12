@@ -16,7 +16,7 @@ using boost::asio::ip::icmp;
 using boost::asio::deadline_timer;
 namespace posix_time = boost::posix_time;
 
-void update_database(Task_Id id, duration<double> value) {
+void update_database(sch::Task_Id id, duration<double> value) {
     std::chrono::milliseconds result = std::chrono::duration_cast<std::chrono::milliseconds>(value);
     sqlite3 *conn;
     sqlite3_stmt* stmt = nullptr;
@@ -125,7 +125,7 @@ void update_database(Task_Id id, duration<double> value) {
     sqlite3_close(conn);
 }
 
-void tcpConnectToGoogle (Task task) {
+void tcpConnectToGoogle (sch::Task task) {
     using namespace boost::asio;
     duration<double> result;
     try {
@@ -159,7 +159,7 @@ void tcpConnectToGoogle (Task task) {
     update_database (task.getTaskId(),result);
 }
 
-void icmpPing (Task task) {
+void icmpPing (sch::Task task) {
     duration<double> result;
     try {
         boost::asio::io_service io_service;
@@ -229,11 +229,11 @@ int main() {
     // initialize the database in the beginning
     initialize_database();
 
-    Scheduler s1;
+    sch::Scheduler s1;
     s1.start();
 
-    Task t1(3,Time_Point::duration(20),&tcpConnectToGoogle);
-    Task t2(4,Time_Point::duration(30),&icmpPing);
+    sch::Task t1(3,sch::Time_Point::duration(20),&tcpConnectToGoogle);
+    sch::Task t2(4,sch::Time_Point::duration(30),&icmpPing);
 
     s1.addTask(t1);
     s1.addTask(t2);
@@ -242,7 +242,7 @@ int main() {
     std::this_thread::sleep_for(seconds(100));
 
     std::cout << "Modifying tcp to google schedule from every 20 sec to 60 sec\n\n\n" << std::endl;
-    s1.modifyTask(t1.getTaskId(),Time_Point::duration(60));
+    s1.modifyTask(t1.getTaskId(),sch::Time_Point::duration(60));
 
     std::this_thread::sleep_for(seconds(200));
     std::clog << "Calling s1.stop()" << std::endl;
