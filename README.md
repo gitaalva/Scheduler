@@ -1,14 +1,15 @@
 # C++ Periodic Task Scheduler
 
-#Dependencies
-Boost (1.60.1)
-sqlite3 (3.8.10.2) (NOTE: should run in either multithreaded or Serialized mode)
-cmake (3.6.1)
+# Dependencies
+
+1.  Boost (1.60.1)
+2. sqlite3 (3.8.10.2) (NOTE: should run in either multithreaded or Serialized mode)
+3. cmake (3.6.1)
 
 #Tested on
     OSX El Capitan (10.11.16)
 
-#Build Instructions
+# Build Instructions
 In the project folder execute the following commands
 
     mkdir build
@@ -16,11 +17,11 @@ In the project folder execute the following commands
     cmake ../
     make
 
-#RUN instructions
+# RUN instructions
 
-#Special instructions:
-# 1. To send icmp packets run with sudo
-# 2. Ignore database create table error when running the executable second time
+# Special instructions:
+  1. To send icmp packets run with sudo
+  2. Ignore database create table error when running the executable second time
 
 # Execute to send tcp and icmp packets to google.com
 
