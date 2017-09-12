@@ -28,8 +28,7 @@ In the project folder execute the following commands
     sudo ./Scheduler (Note: sudo required to send icmp packets)
 
 
-# To run unit tests that checks that add task, modify task and cancelTask is
-#working properly
+To run unit tests that checks that addTask, modify task and cancelTask is working properly
 
     Note: test executables are in testBin folder
 
